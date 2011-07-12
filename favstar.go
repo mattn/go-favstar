@@ -1,11 +1,9 @@
-package main
+package favstar
 
 import (
-	"fmt"
 	"html"
 	"http"
 	"io/ioutil"
-	"log"
 	"os"
 	"strings"
 	"github.com/mattn/go-iconv"
@@ -105,22 +103,27 @@ func isRt(id string) bool {
 	return strings.Index(id, "rt_by_others_") == 0
 }
 
-func main() {
-	if len(os.Args) != 2 {
-		println("usage: favstar [user_id]")
-		os.Exit(-1)
-	}
-	user := os.Args[1]
-	res, err := http.Get("http://favstar.fm/users/" + user + "/recent")
+type Entry struct {
+	Text string
+	Fav []string
+	RT []string
+}
+
+type Favstar struct {
+	Entry []Entry
+}
+
+func Get(user_id string) (f Favstar, err os.Error) {
+	res, err := http.Get("http://favstar.fm/users/" + user_id + "/recent")
 	if err != nil {
-		log.Fatal("failed to display favstar:", err)
+		return
 	}
 	defer res.Body.Close()
 	b, _ := ioutil.ReadAll(res.Body)
 
 	doc, err := html.Parse(strings.NewReader(string(b)))
 	if err != nil {
-		log.Fatal("failed to parse html:", err)
+		return
 	}
 	tweetWithStats := walk(doc, "div", cond{"class": "tweetWithStats"})
 	for _, tweetWithStat := range tweetWithStats {
@@ -128,26 +131,24 @@ func main() {
 		if len(theTweet) == 0 {
 			continue
 		}
-		fmt.Println(convert_utf8(text(theTweet[0])))
+		var e Entry
+		e.Text = text(theTweet[0])
 		avatarLists := walk(tweetWithStat, "div", cond{"class": "avatarList"})
 		for _, avatarList := range avatarLists {
 			id := attr(avatarList, "id")
 			avatars := walk(avatarList, "a", cond{"class": "avatar"})
 			if isFav(id) {
-				fmt.Print("FAV: ")
 				for _, avatar := range avatars {
-					fmt.Print(attr(avatar, "title"), " ")
+					e.Fav = append(e.Fav, attr(avatar, "title"))
 				}
-				fmt.Println()
 			}
 			if isRt(id) {
-				fmt.Print("RT: ")
 				for _, avatar := range avatars {
-					fmt.Print(attr(avatar, "title"), " ")
+					e.RT = append(e.RT, attr(avatar, "title"))
 				}
-				fmt.Println()
 			}
 		}
-		fmt.Println()
+		f.Entry = append(f.Entry, e)
 	}
+	return
 }

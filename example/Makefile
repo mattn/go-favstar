@@ -4,8 +4,8 @@
 
 include $(GOROOT)/src/Make.inc
 
-TARG=github.com/mattn/go-favstar
+TARG=favstar
 GOFILES=\
 	favstar.go\
 
-include $(GOROOT)/src/Make.pkg
+include $(GOROOT)/src/Make.cmd
