@@ -8,6 +8,7 @@ import (
 	"log"
 	"os"
 	"strings"
+	"github.com/mattn/go-iconv/iconv"
 )
 
 type cond map[string]string
@@ -70,6 +71,16 @@ func walk(n *html.Node, tag string, attr cond) (l []*html.Node) {
 	return
 }
 
+func convert_utf8(s string) string {
+	ic, err := iconv.Open("char", "UTF-8")
+	if err != nil {
+		return s
+	}
+	defer ic.Close()
+	ret, _ := ic.Conv(s)
+	return ret
+}
+
 func text(node *html.Node) (text string) {
 	for _, t := range walk(node, "TEXT", cond{}) {
 		text += strings.TrimSpace(t.Data)
@@ -117,7 +128,7 @@ func main() {
 		if len(theTweet) == 0 {
 			continue
 		}
-		fmt.Println(text(theTweet[0]))
+		fmt.Println(convert_utf8(text(theTweet[0])))
 		avatarLists := walk(tweetWithStat, "div", cond{"class": "avatarList"})
 		for _, avatarList := range avatarLists {
 			id := attr(avatarList, "id")
