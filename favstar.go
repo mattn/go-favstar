@@ -8,7 +8,7 @@ import (
 	"log"
 	"os"
 	"strings"
-	"github.com/mattn/go-iconv/iconv"
+	"github.com/mattn/go-iconv"
 )
 
 type cond map[string]string
