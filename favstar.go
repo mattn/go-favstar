@@ -1,12 +1,11 @@
 package favstar
 
 import (
+	"github.com/mattn/go-iconv"
 	"html"
 	"http"
 	"io/ioutil"
-	"os"
 	"strings"
-	"github.com/mattn/go-iconv"
 )
 
 type cond map[string]string
@@ -105,21 +104,24 @@ func isRt(id string) bool {
 
 type Entry struct {
 	Text string
-	Fav []string
-	RT []string
+	Fav  []string
+	RT   []string
 }
 
 type Favstar struct {
 	Entry []Entry
 }
 
-func Get(user_id string) (f Favstar, err os.Error) {
+func Get(user_id string) (f Favstar, err error) {
 	res, err := http.Get("http://favstar.fm/users/" + user_id + "/recent")
 	if err != nil {
 		return
 	}
 	defer res.Body.Close()
-	b, _ := ioutil.ReadAll(res.Body)
+	b, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		return
+	}
 
 	doc, err := html.Parse(strings.NewReader(string(b)))
 	if err != nil {
