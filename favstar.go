@@ -15,8 +15,8 @@ func walk(n *html.Node, tag string, attr cond) (l []*html.Node) {
 	case html.ErrorNode:
 		return
 	case html.DocumentNode:
-		if len(n.Child) > 0 {
-			l = walk(n.Child[0], tag, attr)
+		for _, c := range n.Child {
+			l = walk(c, tag, attr)
 		}
 		return
 	case html.CommentNode:
