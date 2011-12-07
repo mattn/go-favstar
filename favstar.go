@@ -3,8 +3,8 @@ package favstar
 import (
 	"github.com/mattn/go-iconv"
 	"html"
-	"http"
 	"io/ioutil"
+	"net/http"
 	"strings"
 )
 
