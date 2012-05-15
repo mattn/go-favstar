@@ -2,7 +2,7 @@ package favstar
 
 import (
 	"github.com/mattn/go-iconv"
-	"exp/html"
+	"code.google.com/p/go/src/pkg/exp/html"
 	"io/ioutil"
 	"net/http"
 	"strings"
