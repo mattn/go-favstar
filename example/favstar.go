@@ -5,18 +5,7 @@ import (
 	"log"
 	"os"
 	"github.com/mattn/go-favstar"
-	"github.com/mattn/go-iconv"
 )
-
-func convert_utf8(s string) string {
-	ic, err := iconv.Open("char", "UTF-8")
-	if err != nil {
-		return s
-	}
-	defer ic.Close()
-	ret, _ := ic.Conv(s)
-	return ret
-}
 
 func main() {
 	if len(os.Args) != 2 {
@@ -29,7 +18,7 @@ func main() {
 		log.Fatal("failed to display favstar:", err)
 	}
 	for _, e := range f.Entry {
-		fmt.Println(convert_utf8(e.Text))
+		fmt.Println(e.Text)
 		if len(e.Fav) > 0 {
 			fmt.Print("FAV: ")
 			for _, ef := range e.Fav {

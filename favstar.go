@@ -1,8 +1,7 @@
 package favstar
 
 import (
-	"github.com/mattn/go-iconv"
-	"code.google.com/p/go/src/pkg/exp/html"
+	"exp/html"
 	"io/ioutil"
 	"net/http"
 	"strings"
@@ -15,7 +14,7 @@ func walk(n *html.Node, tag string, attr cond) (l []*html.Node) {
 	case html.ErrorNode:
 		return
 	case html.DocumentNode:
-		for _, c := range n.Child {
+		for c := n.FirstChild; c != nil; c = c.NextSibling {
 			l = walk(c, tag, attr)
 		}
 		return
@@ -36,7 +35,7 @@ func walk(n *html.Node, tag string, attr cond) (l []*html.Node) {
 					return
 				}
 			}
-			if len(attr) > 0 {
+			if attr != nil && len(attr) > 0 {
 				for _, a := range n.Attr {
 					val, found := attr[a.Key]
 					if found {
@@ -53,7 +52,7 @@ func walk(n *html.Node, tag string, attr cond) (l []*html.Node) {
 				l = append(l, n)
 			}
 		}
-		for _, c := range n.Child {
+		for c := n.FirstChild; c != nil; c = c.NextSibling {
 			for _, f := range walk(c, tag, attr) {
 				for _, e := range l {
 					if e == f {
@@ -66,16 +65,6 @@ func walk(n *html.Node, tag string, attr cond) (l []*html.Node) {
 	}
 
 	return
-}
-
-func convert_utf8(s string) string {
-	ic, err := iconv.Open("char", "UTF-8")
-	if err != nil {
-		return s
-	}
-	defer ic.Close()
-	ret, _ := ic.Conv(s)
-	return ret
 }
 
 func text(node *html.Node) (text string) {
@@ -127,27 +116,25 @@ func Get(user_id string) (f Favstar, err error) {
 	if err != nil {
 		return
 	}
-	tweetWithStats := walk(doc, "div", cond{"class": "tweetWithStats"})
+	tweetWithStats := walk(doc, "div", cond{"class": "fs-tweet"})
 	for _, tweetWithStat := range tweetWithStats {
-		theTweet := walk(tweetWithStat, "div", cond{"class": "theTweet"})
-		if len(theTweet) == 0 {
+		t := walk(tweetWithStat, "p", cond{"class": "fs-tweet-text"})
+		if t == nil {
 			continue
 		}
 		var e Entry
-		e.Text = text(theTweet[0])
-		avatarLists := walk(tweetWithStat, "div", cond{"class": "avatarList"})
-		for _, avatarList := range avatarLists {
-			id := attr(avatarList, "id")
-			avatars := walk(avatarList, "a", cond{"class": "avatar"})
-			if isFav(id) {
-				for _, avatar := range avatars {
-					e.Fav = append(e.Fav, attr(avatar, "title"))
-				}
+		e.Text = t[0].FirstChild.Data
+
+		favs := walk(tweetWithStat, "div", cond{"data-type": "favs"})
+		if favs != nil {
+			for _, aa := range walk(favs[0], "a", nil) {
+				e.Fav = append(e.Fav, attr(aa, "title"))
 			}
-			if isRt(id) {
-				for _, avatar := range avatars {
-					e.RT = append(e.RT, attr(avatar, "title"))
-				}
+		}
+		rts := walk(tweetWithStat, "div", cond{"data-type": "rts"})
+		if rts != nil {
+			for _, aa := range walk(rts[0], "a", nil) {
+				e.RT = append(e.RT, attr(aa, "title"))
 			}
 		}
 		f.Entry = append(f.Entry, e)
