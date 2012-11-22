@@ -2,9 +2,9 @@ package main
 
 import (
 	"fmt"
+	"github.com/mattn/go-favstar"
 	"log"
 	"os"
-	"github.com/mattn/go-favstar"
 )
 
 func main() {
